@@ -1,0 +1,20 @@
+# Lead scoring configuration
+
+weights:
+  hiring_velocity: 0.6
+  tech_stack_match: 0.4
+
+thresholds:
+  hot_lead_minimum_score: 60
+  minimum_jobs_for_signal: 3
+
+velocity_scoring:
+  # Jobs this week compared to last week
+  high_growth_threshold: 1.0      # 100%+ growth = max score
+  moderate_growth_threshold: 0.5  # 50% growth = good score
+  baseline_score: 40              # Even flat hiring gets some points
+
+tech_match_scoring:
+  # Based on overlap with my_tech_stack
+  full_match_bonus: 20            # Extra points for 100% match
+  partial_match_penalty: 0        # No penalty for partial match

@@ -1,0 +1,63 @@
+# Tech stack keywords for extraction and matching
+
+languages:
+  - python
+  - java
+  - javascript
+  - typescript
+  - go
+  - golang
+  - rust
+  - ruby
+  - php
+  - scala
+  - kotlin
+  - swift
+
+frameworks:
+  - react
+  - vue
+  - angular
+  - django
+  - flask
+  - fastapi
+  - spring
+  - rails
+  - express
+  - nextjs
+  - nuxt
+
+cloud_infrastructure:
+  - kubernetes
+  - k8s
+  - docker
+  - terraform
+  - ansible
+  - aws
+  - gcp
+  - azure
+  - cloudflare
+
+data_tools:
+  - postgresql
+  - postgres
+  - mysql
+  - mongodb
+  - redis
+  - elasticsearch
+  - kafka
+  - spark
+  - airflow
+  - dbt
+  - snowflake
+  - databricks
+  - duckdb
+
+# Your preferred tech stack for matching
+my_tech_stack:
+  - kubernetes
+  - python
+  - react
+  - postgresql
+  - terraform
+  - dbt
