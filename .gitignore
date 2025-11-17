@@ -36,6 +36,7 @@ dagster_lab3/__pycache__/
 warehouse/*.duckdb
 warehouse/*.duckdb.wal
 warehouse/*.duckdb-shm
+warehouse/hiring_signals.duckdb
 
 # But DO commit schema and snapshots
 !warehouse/schema.sql
@@ -63,3 +64,9 @@ temp/
 # Mac
 .DS_Store
 Thumbs.db
+
+# DuckDB files (CRITICAL - don't commit databases)
+*.duckdb
+*.duckdb.wal
+*.duckdb-shm
+warehouse/*.duckdb*
