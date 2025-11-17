@@ -1,9 +1,10 @@
-.PHONY: help setup clean test lint format dagster-dev dagster-materialize snapshot db-init db-query
+.PHONY: help setup clean test lint format dagster-dev dagster-materialize snapshot db-init db-query check-python
 
 help:
 	@echo "Lab 3: Hiring Signals Pipeline"
 	@echo ""
 	@echo "Available commands:"
+	@echo "  make check-python       - Verify Python version"
 	@echo "  make setup              - Initialize database and install deps"
 	@echo "  make db-init            - Initialize/reset database schema"
 	@echo "  make db-query           - Query database stats"
@@ -15,11 +16,20 @@ help:
 	@echo "  make snapshot           - Export weekly snapshot to Parquet"
 	@echo "  make clean              - Remove generated files"
 
-setup: db-init
+check-python:
+	@python --version 2>&1 | grep -q "Python 3\." || \
+		(echo "❌ Error: Python 3.10+ required. Current version:" && python --version && \
+		 echo "\nPlease activate a Python 3 virtual environment:" && \
+		 echo "  python3 -m venv venv" && \
+		 echo "  source venv/bin/activate" && \
+		 exit 1)
+	@echo "✅ Python version OK: $$(python --version)"
+
+setup: check-python db-init
 	pip install -r requirements.txt
 	@echo "✅ Setup complete. Run 'make dagster-dev' to start."
 
-db-init:
+db-init: check-python
 	@echo "🔧 Initializing DuckDB schema..."
 	@mkdir -p warehouse
 	@python -c "\
@@ -32,7 +42,7 @@ tables = conn.execute('SHOW TABLES').fetchall(); \
 print('✅ Tables created:', [t[0] for t in tables]); \
 conn.close()"
 
-db-query:
+db-query: check-python
 	@python -c "\
 import duckdb; \
 conn = duckdb.connect('warehouse/hiring_signals.duckdb'); \
@@ -43,13 +53,13 @@ print('🏢 Top companies:'); \
 [print(f'  - {c}: {n}') for c, n in companies]; \
 conn.close()"
 
-dagster-dev:
+dagster-dev: check-python
 	dagster dev -m dagster_lab3.definitions
 
-dagster-materialize:
+dagster-materialize: check-python
 	dagster asset materialize --select '*' -m dagster_lab3.definitions
 
-test:
+test: check-python
 	pytest tests/ -v --cov=src --cov=dagster_lab3
 
 lint:
@@ -58,7 +68,7 @@ lint:
 format:
 	ruff format src/ dagster_lab3/ tests/
 
-snapshot:
+snapshot: check-python
 	@echo "Exporting snapshot to Parquet..."
 	@mkdir -p warehouse/snapshots
 	@python -c "\
