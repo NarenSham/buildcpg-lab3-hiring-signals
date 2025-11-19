@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  dagster:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Use named volume for database (persists between restarts)
+      - dagster_data:/app/warehouse
+      # Hot reload code changes
+      - ./dagster_lab3:/app/dagster_lab3
+      - ./src:/app/src
+      - ./warehouse/schema.sql:/app/warehouse/schema.sql
+    environment:
+      - DAGSTER_HOME=/tmp/dagster_home
+
+volumes:
+  dagster_data:

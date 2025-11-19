@@ -1,49 +1,43 @@
-.PHONY: help setup clean test lint format dagster-dev dagster-materialize snapshot db-init db-query check-python
+.PHONY: help setup dev down logs clean test lint format db-query db-init rebuild
 
 help:
-	@echo "Lab 3: Hiring Signals Pipeline"
+	@echo "Lab 3: Hiring Signals Pipeline (Docker Mode)"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make check-python       - Verify Python version"
-	@echo "  make setup              - Initialize database and install deps"
-	@echo "  make db-init            - Initialize/reset database schema"
+	@echo "  make dev                - Start Dagster in Docker (localhost:3000)"
+	@echo "  make down               - Stop Docker containers"
+	@echo "  make logs               - View container logs"
+	@echo "  make rebuild            - Rebuild and restart containers"
+	@echo "  make db-init            - Reinitialize database in container"
 	@echo "  make db-query           - Query database stats"
-	@echo "  make dagster-dev        - Start Dagster UI (localhost:3000)"
-	@echo "  make dagster-materialize - Materialize all assets"
-	@echo "  make test               - Run pytest"
+	@echo "  make shell              - Open shell in container"
+	@echo "  make test               - Run tests in container"
 	@echo "  make lint               - Run ruff linter"
 	@echo "  make format             - Format code with ruff"
-	@echo "  make snapshot           - Export weekly snapshot to Parquet"
-	@echo "  make clean              - Remove generated files"
+	@echo "  make clean              - Remove containers and volumes"
 
-check-python:
-	@python --version 2>&1 | grep -q "Python 3\." || \
-		(echo "❌ Error: Python 3.10+ required. Current version:" && python --version && \
-		 echo "\nPlease activate a Python 3 virtual environment:" && \
-		 echo "  python3 -m venv venv" && \
-		 echo "  source venv/bin/activate" && \
-		 exit 1)
-	@echo "✅ Python version OK: $$(python --version)"
+dev:
+	docker-compose up -d
+	@echo "✅ Dagster running at http://localhost:3000"
 
-setup: check-python db-init
-	pip install -r requirements.txt
-	@echo "✅ Setup complete. Run 'make dagster-dev' to start."
+down:
+	docker-compose down
 
-db-init: check-python
-	@echo "🔧 Initializing DuckDB schema..."
-	@mkdir -p warehouse
-	@python -c "\
-import duckdb; \
-conn = duckdb.connect('warehouse/hiring_signals.duckdb'); \
-schema = open('warehouse/schema.sql').read(); \
-statements = [s.strip() for s in schema.split(';') if s.strip()]; \
-[conn.execute(s) for s in statements]; \
-tables = conn.execute('SHOW TABLES').fetchall(); \
-print('✅ Tables created:', [t[0] for t in tables]); \
-conn.close()"
+logs:
+	docker-compose logs -f dagster
 
-db-query: check-python
-	@python -c "\
+rebuild:
+	docker-compose down
+	docker-compose build --no-cache
+	docker-compose up -d
+	@echo "✅ Rebuilt and restarted"
+
+db-init:
+	docker-compose exec dagster python scripts/init_db.py
+	@echo "✅ Database reinitialized"
+
+db-query:
+	docker-compose exec dagster python -c "\
 import duckdb; \
 conn = duckdb.connect('warehouse/hiring_signals.duckdb'); \
 count = conn.execute('SELECT COUNT(*) FROM raw_jobs').fetchone()[0]; \
@@ -53,14 +47,11 @@ print('🏢 Top companies:'); \
 [print(f'  - {c}: {n}') for c, n in companies]; \
 conn.close()"
 
-dagster-dev: check-python
-	dagster dev -m dagster_lab3.definitions
+shell:
+	docker-compose exec dagster /bin/bash
 
-dagster-materialize: check-python
-	dagster asset materialize --select '*' -m dagster_lab3.definitions
-
-test: check-python
-	pytest tests/ -v --cov=src --cov=dagster_lab3
+test:
+	docker-compose exec dagster pytest tests/ -v
 
 lint:
 	ruff check src/ dagster_lab3/ tests/
@@ -68,22 +59,9 @@ lint:
 format:
 	ruff format src/ dagster_lab3/ tests/
 
-snapshot: check-python
-	@echo "Exporting snapshot to Parquet..."
-	@mkdir -p warehouse/snapshots
-	@python -c "\
-import duckdb; \
-from datetime import datetime; \
-conn = duckdb.connect('warehouse/hiring_signals.duckdb'); \
-week = datetime.now().strftime('%Y-W%U'); \
-conn.execute(f\"EXPORT DATABASE 'warehouse/snapshots/{week}' (FORMAT PARQUET)\"); \
-print(f\"✅ Snapshot saved to warehouse/snapshots/{week}/\")"
-
 clean:
-	rm -rf .pytest_cache/
-	rm -rf htmlcov/
-	rm -rf .coverage
-	rm -rf dagster_lab3/tmpg*/
-	rm -rf .dagster/
+	docker-compose down -v
+	rm -rf .pytest_cache/ htmlcov/ .coverage .dagster/
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
+	@echo "✅ Cleaned up containers, volumes, and temp files"

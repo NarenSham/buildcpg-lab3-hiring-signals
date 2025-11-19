@@ -18,10 +18,13 @@ CREATE TABLE IF NOT EXISTS raw_jobs (
 CREATE TABLE IF NOT EXISTS cleaned_jobs (
     job_id VARCHAR PRIMARY KEY,
     company VARCHAR NOT NULL,
+    company_normalized VARCHAR,  
     title VARCHAR NOT NULL,
+    title_normalized VARCHAR,     
     description TEXT,
     location VARCHAR,
     posting_date DATE,
+    url VARCHAR,                  
     source VARCHAR,
     first_seen TIMESTAMP,
     last_seen TIMESTAMP

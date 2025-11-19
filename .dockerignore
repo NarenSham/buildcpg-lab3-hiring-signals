@@ -1,0 +1,17 @@
+# Don't copy these to Docker image
+venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.DS_Store
+*.duckdb
+*.duckdb.wal
+.dagster/
+tmpg*/
+htmlcov/
+.coverage
+.pytest_cache/
+README.md
+LICENSE
+.github/

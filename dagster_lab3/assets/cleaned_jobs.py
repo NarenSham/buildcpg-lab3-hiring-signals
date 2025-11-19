@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 @asset(
-    deps=["raw_jobs_asset"],  # Depends on raw_jobs
+    deps=["raw_jobs_asset"],
     description="Deduplicated and normalized job postings",
     group_name="transformation",
 )
@@ -31,7 +31,7 @@ def cleaned_jobs_asset(
     
     context.log.info("Reading raw jobs data")
     
-    # Read raw_jobs using Polars (much faster than pandas)
+    # Read raw_jobs using Polars
     df = pl.read_database(
         query="SELECT * FROM raw_jobs",
         connection=conn
@@ -54,14 +54,14 @@ def cleaned_jobs_asset(
         pl.concat_str([
             pl.col("company_normalized"),
             pl.col("title_normalized"),
-            pl.col("location"),
+            pl.col("location").fill_null(""),
         ], separator="|").alias("dedup_key")
     ])
     
     # Step 3: Deduplicate - keep first occurrence, track dates
     df_deduped = (
         df
-        .sort("scraped_at")  # Oldest first
+        .sort("scraped_at")
         .group_by("dedup_key")
         .agg([
             pl.col("job_id").first().alias("job_id"),
@@ -79,6 +79,9 @@ def cleaned_jobs_asset(
         ])
     )
     
+    # Drop the dedup_key column (not in schema)
+    df_deduped = df_deduped.drop("dedup_key")
+    
     cleaned_count = len(df_deduped)
     duplicates_removed = initial_count - cleaned_count
     
@@ -88,30 +91,40 @@ def cleaned_jobs_asset(
     )
     
     # Step 4: Write to cleaned_jobs table
-    # First, ensure table exists
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS cleaned_jobs (
-            job_id VARCHAR PRIMARY KEY,
-            company VARCHAR NOT NULL,
-            company_normalized VARCHAR NOT NULL,
-            title VARCHAR NOT NULL,
-            title_normalized VARCHAR NOT NULL,
-            description TEXT,
-            location VARCHAR,
-            posting_date DATE,
-            url VARCHAR,
-            source VARCHAR,
-            first_seen TIMESTAMP,
-            last_seen TIMESTAMP
-        )
-    """)
+    # Delete old data
+    conn.execute("DELETE FROM cleaned_jobs")
     
-    # Write data
-    conn.execute("DELETE FROM cleaned_jobs")  # Replace all data
-    conn.execute("""
-        INSERT INTO cleaned_jobs 
-        SELECT * FROM df_deduped
-    """)
+    # Convert Polars DataFrame to list of tuples for insertion
+    rows = [
+        (
+            row["job_id"],
+            row["company"],
+            row["company_normalized"],
+            row["title"],
+            row["title_normalized"],
+            row["description"],
+            row["location"],
+            row["posting_date"],
+            row["url"],
+            row["source"],
+            row["first_seen"],
+            row["last_seen"],
+        )
+        for row in df_deduped.to_dicts()
+    ]
+    
+    # Insert data
+    conn.executemany(
+        """
+        INSERT INTO cleaned_jobs (
+            job_id, company, company_normalized, title, title_normalized,
+            description, location, posting_date, url, source,
+            first_seen, last_seen
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        rows
+    )
     
     context.log.info(f"Wrote {cleaned_count} cleaned jobs to database")
     

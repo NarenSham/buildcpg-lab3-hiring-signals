@@ -1,18 +1,24 @@
-# Core
-duckdb==0.9.2
-dagster==1.5.13
-dagster-webserver==1.5.13
-polars==0.20.3
-requests==2.31.0
-feedparser==6.0.10
-pydantic==2.5.0
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
-pyyaml==6.0.1
+# Lab 3: Hiring Signals Pipeline
+# Python 3.11 recommended
 
-# Dev
-pytest==7.4.3
-ruff==0.1.8
+# Data processing
+numpy==1.26.4
+pyarrow==14.0.2
+polars==0.20.31
+duckdb==0.10.0
 
-# Logging
-structlog==23.3.0
+# Dagster orchestration
+dagster==1.7.16
+dagster-webserver==1.7.16
+
+# Scraping & utilities
+feedparser==6.0.11
+requests==2.32.3
+beautifulsoup4==4.12.3
+structlog==24.4.0
+python-dotenv==1.0.1
+python-dateutil==2.9.0
+
+# Validation
+pydantic==2.9.2
+pydantic-settings==2.6.1
