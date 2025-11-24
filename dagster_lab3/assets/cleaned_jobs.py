@@ -61,7 +61,7 @@ def cleaned_jobs_asset(
     # Step 3: Deduplicate - keep first occurrence, track dates
     df_deduped = (
         df
-        .sort("scraped_at")
+        .sort("first_scraped_at")
         .group_by("dedup_key")
         .agg([
             pl.col("job_id").first().alias("job_id"),
@@ -74,8 +74,8 @@ def cleaned_jobs_asset(
             pl.col("posting_date").first().alias("posting_date"),
             pl.col("url").first().alias("url"),
             pl.col("source").first().alias("source"),
-            pl.col("scraped_at").min().alias("first_seen"),
-            pl.col("scraped_at").max().alias("last_seen"),
+            pl.col("first_scraped_at").min().alias("first_seen"),
+            pl.col("last_scraped_at").max().alias("last_seen"),
         ])
     )
     
