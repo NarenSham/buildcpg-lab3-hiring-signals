@@ -33,7 +33,7 @@ jobs:
           pip install -r requirements.txt
       
       - name: Initialize database
-        run: make db-init
+        run: python scripts/init_db.py
       
       - name: Verify database
         run: |
@@ -65,7 +65,7 @@ jobs:
           pip install -r requirements.txt
       
       - name: Initialize database
-        run: make db-init
+        run: python scripts/init_db.py
       
       - name: Validate Dagster definitions
         run: |
