@@ -9,6 +9,8 @@ from .lead_scores import (
     check_minimum_leads,
     check_score_validity,
 )
+from .exports import export_dashboard_data
+
 
 
 __all__ = ["raw_jobs_asset",
@@ -17,4 +19,5 @@ __all__ = ["raw_jobs_asset",
          "lead_scores_asset",
          "check_target_techs_configured",
          "check_minimum_leads",
-         "check_score_validity"]
+         "check_score_validity"
+         "export_dashboard_data",]

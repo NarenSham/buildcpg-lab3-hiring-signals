@@ -14,6 +14,22 @@ services:
       - ./warehouse/schema.sql:/app/warehouse/schema.sql
     environment:
       - DAGSTER_HOME=/tmp/dagster_home
+  dashboard:
+    image: python:3.11-slim
+    working_dir: /app
+    command: >
+      sh -c "
+      pip install --no-cache-dir streamlit==1.31.0 polars==1.9.0 plotly==5.18.0 duckdb==0.10.0 &&
+      streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+      "
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./dashboard:/app/dashboard
+      - dagster_data:/app/warehouse:ro  # Read-only access to DuckDB
+    depends_on: 
+      - dagster
+    restart: unless-stopped
 
 volumes:
   dagster_data:
