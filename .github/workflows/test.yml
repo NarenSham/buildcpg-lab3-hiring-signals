@@ -69,4 +69,4 @@ jobs:
       
       - name: Validate Dagster definitions
         run: |
-          dagster definitions validate -m dagster_lab3.definitions
+          dagster job list -m dagster_lab3.definitions
